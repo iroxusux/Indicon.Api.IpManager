@@ -68,11 +68,11 @@ namespace Indicon.Api.IpManager.Classes
             bool bSuccess = NetworkManager.SetNICStatic(oAddress.NetworkInterfaceMAC, sIP, sSubnet, sGateway, string.Empty);
             if (bSuccess)
             {
-                MessageBox.Show("Success!", "Set DHCP");
+                MessageBox.Show("Success!", "Set Static");
             }
             else
             {
-                MessageBox.Show("Failure!", "Set DHCP");
+                MessageBox.Show("Failure!", "Set Static");
             }
         }
         public static void SetDHCPScheme(string sMAC)
