@@ -44,6 +44,11 @@ namespace Indicon.Api.IpManager.Classes
                 {
                     return false;
                 }
+                if (!(bool)oManager["IPEnabled"])
+                {
+                    MessageBox.Show("This adapter cannot be configured!\n'IP NOT ENABLED'\nPlease plug a cable into the adapter or enable IP!", "Cannot update adapter!");
+                    return false;
+                }
                 /// Set IP Protocol Address
                 ManagementBaseObject oIP = oManager.GetMethodParameters("EnableStatic");
                 oIP["IPAddress"] = sIP;
