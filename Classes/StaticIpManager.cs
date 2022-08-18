@@ -68,11 +68,11 @@ namespace Indicon.Api.IpManager.Classes
             bool bSuccess = NetworkManager.SetNICStatic(oAddress.NetworkInterfaceMAC, sIP, sSubnet, sGateway, string.Empty);
             if (bSuccess)
             {
-                MessageBox.Show("Success!");
+                MessageBox.Show("Success!", "Set DHCP");
             }
             else
             {
-                MessageBox.Show("Failure!");
+                MessageBox.Show("Failure!", "Set DHCP");
             }
         }
         public static void SetDHCPScheme(string sMAC)
@@ -80,11 +80,11 @@ namespace Indicon.Api.IpManager.Classes
             (uint, uint) oResponse = NetworkManager.SetNICDHCP(sMAC);
             if (oResponse.Item1 == 0 && oResponse.Item2 == 0)
             {
-                MessageBox.Show("Success!");
+                MessageBox.Show("Success!", "Set DHCP");
             }
             else
             {
-                MessageBox.Show("Failure!");
+                MessageBox.Show("Failure!", "Set DHCP");
             }
         }
         public static void OpenNetworkConnectionsPanel()
