@@ -276,6 +276,7 @@ namespace Indicon.Api.IpManager.Forms
             oStripBuilder.Items.Add("-");
             /// Setup static IP configuration hotkeys for the drop down
             ToolStripMenuItem oSetStaticItem = new ToolStripMenuItem() { Name = "SetStatic", Text = "Set Static" };
+            oSetStaticItem.DropDownDirection = ToolStripDropDownDirection.Left;
             for (int i = 0; i < oElements.Length; i++)
             {
                 string sDisplayString = $"{oElements[i].Name} {oElements[i].IpAddressString}";
@@ -285,6 +286,7 @@ namespace Indicon.Api.IpManager.Forms
             }
             /// Setup DHCP configuration hotkeys for the drop down
             ToolStripMenuItem oSetDHCPItem = new ToolStripMenuItem() { Name = "SetDHCP", Text = "Set DHCP" };
+            oSetDHCPItem.DropDownDirection = ToolStripDropDownDirection.Left;
             foreach (NetworkInterface oAdapter in NetworkInterface.GetAllNetworkInterfaces())
             {
                 ToolStripMenuItem oNewDHCPItem = new ToolStripMenuItem() { Name = oAdapter.Name, Text = oAdapter.Name, Tag = oAdapter };
