@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.NetworkInformation;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Indicon.Api.IpManager.Classes
+﻿namespace Indicon.Api.IpManager.Classes
 {
     [Serializable]
     public sealed class Ipv4Address : IEquatable<Ipv4Address>

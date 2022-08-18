@@ -1,7 +1,6 @@
 ﻿using System.Management;
 using System.Net.NetworkInformation;
 using System.Diagnostics;
-using System.Net;
 
 namespace Indicon.Api.IpManager.Classes
 {

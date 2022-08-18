@@ -596,7 +596,6 @@
         private System.Windows.Forms.TextBox IPTextBox2;
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.TextBox IPTextBox1;
-        private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button SaveSchemeButton;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.ComboBox AdapterComboBox;

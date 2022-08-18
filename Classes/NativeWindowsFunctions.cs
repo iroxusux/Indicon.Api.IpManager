@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using System.Windows;
 
 namespace Indicon.Api.IpManager.Classes
 {

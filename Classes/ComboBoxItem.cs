@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Indicon.Api.IpManager.Classes
+﻿namespace Indicon.Api.IpManager.Classes
 {
     internal class ComboBoxItem
     {
