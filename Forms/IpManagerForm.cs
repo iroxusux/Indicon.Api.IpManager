@@ -17,6 +17,7 @@ namespace Indicon.Api.IpManager.Forms
     {
         private const int IP_LOW = 0;
         private const int IP_HIGH = 255;
+        private bool bHintShown = false;
         public EventHandler<IpAddressCommitEventArgs> IpCommited = delegate { };
         public IpManagerForm()
         {
@@ -27,14 +28,13 @@ namespace Indicon.Api.IpManager.Forms
         {
             /// Subscribe our functions to the system StaticIpManager
             IpCommited += new EventHandler<IpAddressCommitEventArgs>(StaticIpManager.CreateNewIp);
-
-            /// Compile network interface adapters into combo box for user selection
+            /// Compile network interface adapters into combo box for user selection (Static & DHCP Configurations)
             foreach (NetworkInterface oAdapter in NetworkInterface.GetAllNetworkInterfaces())
             {
                 ComboBoxItem oItem = new ComboBoxItem() { Text = oAdapter.Name, Tag = oAdapter };
                 AdapterComboBox.Items.Add(oItem);
+                AdapterComboBoxDHCP.Items.Add(oItem);
             }
-
             /// Prepare list view
             IpConfigListView.View = View.Details;
             IpConfigListView.GridLines = true;
@@ -46,11 +46,14 @@ namespace Indicon.Api.IpManager.Forms
             IpConfigListView.Columns.Add("Network Interface", -2, HorizontalAlignment.Left);
 
             /// Setup context menu strip
-            // Use "throw-away" class to quickly build tool strip items
             ContextMenuStrip oStripBuilder = new ContextMenuStrip();
             var oEditEntry = oStripBuilder.Items.Add("Edit Entry", null, new EventHandler(CmEditEntry));
             var oDeleteEntry = oStripBuilder.Items.Add("Delete Entry", null, new EventHandler(CmDeleteEntry));
             IpConfigListView.ContextMenuStrip = oStripBuilder;
+
+            /// Setup combo box
+            AdapterComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            AdapterComboBoxDHCP.DropDownStyle = ComboBoxStyle.DropDownList;
         }
         public void UpdateIpList(Ipv4Address[] oElements)
         {
@@ -66,6 +69,7 @@ namespace Indicon.Api.IpManager.Forms
             }
             IpConfigListView.Sorting = SortOrder.Ascending;
             IpConfigListView.Sort();
+            UpdateTrayContextMenuStrip(oElements);
         }
         private void IpSchemeTextBoxChanged(object sender, EventArgs e)
         {
@@ -245,14 +249,13 @@ namespace Indicon.Api.IpManager.Forms
             {
                 Hide();
                 SystemTrayNotifyIcon.Visible = true;
-                SystemTrayNotifyIcon.ShowBalloonTip(1500);
+                if (!bHintShown)
+                {
+                    SystemTrayNotifyIcon.ShowBalloonTip(1500);
+                    bHintShown = true;
+                }
+                
             }
-        }
-        private void SystemTrayNotifyIcon_OnMouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            Show();
-            WindowState = FormWindowState.Normal;
-            SystemTrayNotifyIcon.Visible = false;
         }
         private void OnExit_Click(object sender, EventArgs e)
         {
@@ -265,6 +268,94 @@ namespace Indicon.Api.IpManager.Forms
                 e.Cancel = true;
                 WindowState = FormWindowState.Minimized;
             }
+        }
+        private void UpdateTrayContextMenuStrip(Ipv4Address[] oElements)
+        {
+            ContextMenuStrip oStripBuilder = new ContextMenuStrip();
+            oStripBuilder.Items.Add("Open", null, new EventHandler(RestoreWindow));
+            oStripBuilder.Items.Add("-");
+            /// Setup static IP configuration hotkeys for the drop down
+            ToolStripMenuItem oSetStaticItem = new ToolStripMenuItem() { Name = "SetStatic", Text = "Set Static" };
+            for (int i = 0; i < oElements.Length; i++)
+            {
+                string sDisplayString = $"{oElements[i].Name} {oElements[i].IpAddressString}";
+                ToolStripMenuItem oNewStaticItem = new ToolStripMenuItem() { Name = oElements[i].Name, Text = sDisplayString, Tag = oElements[i] };
+                oNewStaticItem.Click += new EventHandler(SystemTray_SetStaticIPAddress);
+                oSetStaticItem.DropDownItems.Add(oNewStaticItem);
+            }
+            /// Setup DHCP configuration hotkeys for the drop down
+            ToolStripMenuItem oSetDHCPItem = new ToolStripMenuItem() { Name = "SetDHCP", Text = "Set DHCP" };
+            foreach (NetworkInterface oAdapter in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                ToolStripMenuItem oNewDHCPItem = new ToolStripMenuItem() { Name = oAdapter.Name, Text = oAdapter.Name, Tag = oAdapter };
+                oNewDHCPItem.Click += new EventHandler(SystemTray_SetDHCPIPAddress);
+                oSetDHCPItem.DropDownItems.Add(oNewDHCPItem);
+            }
+            oStripBuilder.Items.Add(oSetStaticItem);
+            oStripBuilder.Items.Add(oSetDHCPItem);
+            oStripBuilder.Items.Add("-");
+            oStripBuilder.Items.Add("Open Network Connections", null, new EventHandler(OpenNetworkConnections_Click));
+            oStripBuilder.Items.Add("-");
+            oStripBuilder.Items.Add("Exit", null, new EventHandler(OnExit_Click));
+            SystemTrayNotifyIcon.ContextMenuStrip = oStripBuilder;
+        }
+        private void SystemTray_SetStaticIPAddress(object sender, EventArgs e)
+        {
+            ToolStripItem? oItem = sender as ToolStripItem;
+            if(oItem != null)
+            {
+                Ipv4Address? oAddress = oItem.Tag as Ipv4Address;
+                if (oAddress != null)
+                {
+                    StaticIpManager.SetIpScheme(oAddress);
+                }
+            }
+        }
+        private void SystemTray_SetDHCPIPAddress(object sender, EventArgs e)
+        {
+            ToolStripMenuItem oItem = sender as ToolStripMenuItem;
+            if(oItem != null)
+            {
+                NetworkInterface oInterface = oItem.Tag as NetworkInterface;
+                if(oInterface != null)
+                {
+                    StaticIpManager.SetDHCPScheme(oInterface.GetPhysicalAddress().ToString());
+                }
+            }
+        }
+        private void SystemTrayNotifyIcon_OnMouseClick(object sender, MouseEventArgs e)
+        {
+            if(e.Button == MouseButtons.Right)
+            {
+                Point oPoint = NativeWindowsFunctions.GetCursorPosition();
+                SystemTrayNotifyIcon.ContextMenuStrip.Show(oPoint);
+            }
+        }
+        private void SystemTrayNotifyIcon_OnMouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            RestoreWindow(null, EventArgs.Empty);
+        }
+        private void SetDHCPButton_Click(object sender, EventArgs e)
+        {
+            ComboBoxItem? oItem = AdapterComboBoxDHCP.SelectedItem as ComboBoxItem;
+            if (oItem != null)
+            {
+                NetworkInterface oInterface = oItem.Tag as NetworkInterface;
+                if(oInterface != null)
+                {
+                    StaticIpManager.SetDHCPScheme(oInterface.GetPhysicalAddress().ToString());
+                }
+            }
+        }
+        private void RestoreWindow(object sender, EventArgs e)
+        {
+            Show();
+            WindowState = FormWindowState.Normal;
+            SystemTrayNotifyIcon.Visible = false;
+        }
+        private void OpenNetworkConnections_Click(object sender, EventArgs e)
+        {
+            StaticIpManager.OpenNetworkConnectionsPanel();
         }
     }
     public class IpAddressCommitEventArgs : EventArgs

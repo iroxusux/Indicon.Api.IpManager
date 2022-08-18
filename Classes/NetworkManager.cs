@@ -1,6 +1,7 @@
 ﻿using System.Management;
 using System.Net.NetworkInformation;
 using System.Diagnostics;
+using System.Net;
 
 namespace Indicon.Api.IpManager.Classes
 {
@@ -35,7 +36,7 @@ namespace Indicon.Api.IpManager.Classes
             }
             return null;
         }
-        public static bool SetupNIC(string sMAC, string[] sIP, string[] sSubnet, string[] sGateway, string sDNS)
+        public static bool SetNICStatic(string sMAC, string[] sIP, string[] sSubnet, string[] sGateway, string sDNS)
         {
             try
             {
@@ -67,6 +68,36 @@ namespace Indicon.Api.IpManager.Classes
             {
                 Debug.WriteLine(e.Message);
                 return false;
+            }
+        }
+        public static (uint, uint) SetNICDHCP(string sMAC)
+        {
+            try
+            {
+                ManagementObject oManager = GetnetworkInterfaceManagementObject(sMAC);
+                if (oManager == null)
+                {
+                    Debug.WriteLine("No Management Object Found For NIC Card");
+                    return (997, 997);
+                }
+                /// Disable DNS
+                var oDNS = oManager.GetMethodParameters("SetDNSServerSearchOrder");
+                oDNS["DNSServerSearchOrder"] = null;
+                var oEnableDHCP = oManager.InvokeMethod("EnableDHCP", null, null)["ReturnValue"];
+                var oSetDNS = oManager.InvokeMethod("SetDNSServerSearchOrder", oDNS, null)["ReturnValue"];
+                try
+                {
+                    return ((uint)oEnableDHCP, (uint)oSetDNS);
+                }
+                catch (InvalidCastException)
+                {
+                    return (998, 998);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                return (999, 999);
             }
         }
     }

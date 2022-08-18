@@ -65,7 +65,7 @@ namespace Indicon.Api.IpManager.Classes
             string[] sIP = new string[1] { oAddress.IpAddressString };
             string[] sSubnet = new string[1] { oAddress.SubnetMaskString };
             string[] sGateway = new string[1] { oAddress.GatewayString };
-            bool bSuccess = NetworkManager.SetupNIC(oAddress.NetworkInterfaceMAC, sIP, sSubnet, sGateway, string.Empty);
+            bool bSuccess = NetworkManager.SetNICStatic(oAddress.NetworkInterfaceMAC, sIP, sSubnet, sGateway, string.Empty);
             if (bSuccess)
             {
                 MessageBox.Show("Success!");
@@ -74,6 +74,24 @@ namespace Indicon.Api.IpManager.Classes
             {
                 MessageBox.Show("Failure!");
             }
+        }
+        public static void SetDHCPScheme(string sMAC)
+        {
+            (uint, uint) oResponse = NetworkManager.SetNICDHCP(sMAC);
+            if (oResponse.Item1 == 0 && oResponse.Item2 == 0)
+            {
+                MessageBox.Show("Success!");
+            }
+            else
+            {
+                MessageBox.Show("Failure!");
+            }
+        }
+        public static void OpenNetworkConnectionsPanel()
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo("NCPA.cpl");
+            startInfo.UseShellExecute = true;
+            Process.Start(startInfo);
         }
         private static void UpdateFormIpList()
         {

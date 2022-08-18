@@ -8,6 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>_default.ico</ApplicationIcon>
+    <Title>Indicon IP Manager</Title>
   </PropertyGroup>
 
   <ItemGroup>
