@@ -51,8 +51,16 @@ namespace Indicon.Api.IpManager.Classes
                 var oIPResults = oManager.InvokeMethod("EnableStatic", oIP, null)["ReturnValue"];
                 /// Set Gateway
                 ManagementBaseObject oGateway = oManager.GetMethodParameters("SetGateways");
-                oGateway["DefaultIPGateway"] = sGateway;
-                oGateway["GatewayCostMetric"] = new int[] { 1 };
+                if (sGateway[0] == "0.0.0.0")
+                {
+                    oGateway["DefaultIPGateway"] = oIP["IPAddress"];
+                    var oNewResults = oManager.InvokeMethod("SetGateways", oGateway, null)["ReturnValue"];
+                }
+                else
+                {
+                    oGateway["DefaultIPGateway"] = sGateway;
+                    oGateway["GatewayCostMetric"] = new int[] { 1 };
+                }
                 var oGatewayResults = oManager.InvokeMethod("SetGateways", oGateway, null)["ReturnValue"];
                 /// Set DNS
                 if(sDNS != String.Empty)
