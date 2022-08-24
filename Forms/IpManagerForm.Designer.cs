@@ -63,20 +63,26 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.ApplyButton = new System.Windows.Forms.Button();
             this.IpConfigListView = new System.Windows.Forms.ListView();
+            this.PingNetworkButton = new System.Windows.Forms.Button();
             this.ApplyDHCPButton = new System.Windows.Forms.Button();
             this.SystemTrayNotifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openNetworkConnectionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.launchOnWindowsStartToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.label15 = new System.Windows.Forms.Label();
             this.AdapterComboBoxDHCP = new System.Windows.Forms.ComboBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.NetworkPingResultsListView = new System.Windows.Forms.ListView();
             this.IpSchemeGroupBox.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.groupBox3.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // label5
@@ -424,14 +430,14 @@
             this.groupBox2.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(2, 3, 2, 3);
-            this.groupBox2.Size = new System.Drawing.Size(607, 252);
+            this.groupBox2.Size = new System.Drawing.Size(778, 225);
             this.groupBox2.TabIndex = 33;
             this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "IP Configurations";
+            this.groupBox2.Text = "Static IP Configurations";
             // 
             // ApplyButton
             // 
-            this.ApplyButton.Location = new System.Drawing.Point(515, 220);
+            this.ApplyButton.Location = new System.Drawing.Point(686, 19);
             this.ApplyButton.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.ApplyButton.Name = "ApplyButton";
             this.ApplyButton.Size = new System.Drawing.Size(90, 29);
@@ -442,16 +448,27 @@
             // 
             // IpConfigListView
             // 
-            this.IpConfigListView.Location = new System.Drawing.Point(2, 19);
+            this.IpConfigListView.Location = new System.Drawing.Point(4, 19);
             this.IpConfigListView.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.IpConfigListView.Name = "IpConfigListView";
-            this.IpConfigListView.Size = new System.Drawing.Size(603, 198);
+            this.IpConfigListView.Size = new System.Drawing.Size(678, 198);
             this.IpConfigListView.TabIndex = 0;
             this.IpConfigListView.UseCompatibleStateImageBehavior = false;
             // 
+            // PingNetworkButton
+            // 
+            this.PingNetworkButton.Location = new System.Drawing.Point(309, 45);
+            this.PingNetworkButton.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
+            this.PingNetworkButton.Name = "PingNetworkButton";
+            this.PingNetworkButton.Size = new System.Drawing.Size(90, 29);
+            this.PingNetworkButton.TabIndex = 36;
+            this.PingNetworkButton.Text = "Ping Network";
+            this.PingNetworkButton.UseVisualStyleBackColor = true;
+            this.PingNetworkButton.MouseClick += new System.Windows.Forms.MouseEventHandler(this.PingNetworkButtonClick);
+            // 
             // ApplyDHCPButton
             // 
-            this.ApplyDHCPButton.Location = new System.Drawing.Point(277, 34);
+            this.ApplyDHCPButton.Location = new System.Drawing.Point(313, 13);
             this.ApplyDHCPButton.Margin = new System.Windows.Forms.Padding(1);
             this.ApplyDHCPButton.Name = "ApplyDHCPButton";
             this.ApplyDHCPButton.Size = new System.Drawing.Size(86, 29);
@@ -478,7 +495,7 @@
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Padding = new System.Windows.Forms.Padding(5, 1, 0, 1);
-            this.menuStrip1.Size = new System.Drawing.Size(635, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(835, 24);
             this.menuStrip1.TabIndex = 34;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -486,6 +503,8 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openNetworkConnectionsToolStripMenuItem,
+            this.toolStripSeparator2,
+            this.launchOnWindowsStartToolStripMenuItem,
             this.toolStripSeparator1,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -498,6 +517,18 @@
             this.openNetworkConnectionsToolStripMenuItem.Size = new System.Drawing.Size(221, 22);
             this.openNetworkConnectionsToolStripMenuItem.Text = "Open Network Connections";
             this.openNetworkConnectionsToolStripMenuItem.Click += new System.EventHandler(this.OpenNetworkConnections_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(218, 6);
+            // 
+            // launchOnWindowsStartToolStripMenuItem
+            // 
+            this.launchOnWindowsStartToolStripMenuItem.Name = "launchOnWindowsStartToolStripMenuItem";
+            this.launchOnWindowsStartToolStripMenuItem.Size = new System.Drawing.Size(221, 22);
+            this.launchOnWindowsStartToolStripMenuItem.Text = "Launch On Windows Start";
+            this.launchOnWindowsStartToolStripMenuItem.Click += new System.EventHandler(this.LaunchOnWindowsStart_Click);
             // 
             // toolStripSeparator1
             // 
@@ -534,19 +565,39 @@
             // 
             this.groupBox3.Controls.Add(this.AdapterComboBoxDHCP);
             this.groupBox3.Controls.Add(this.label15);
+            this.groupBox3.Controls.Add(this.PingNetworkButton);
             this.groupBox3.Controls.Add(this.ApplyDHCPButton);
             this.groupBox3.Location = new System.Drawing.Point(11, 204);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(367, 81);
+            this.groupBox3.Size = new System.Drawing.Size(404, 81);
             this.groupBox3.TabIndex = 38;
             this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Set DHCP";
+            this.groupBox3.Text = "Extended Adapter Commands";
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.NetworkPingResultsListView);
+            this.groupBox1.Location = new System.Drawing.Point(420, 27);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(369, 258);
+            this.groupBox1.TabIndex = 39;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Network Ping Results";
+            // 
+            // NetworkPingResultsListView
+            // 
+            this.NetworkPingResultsListView.Location = new System.Drawing.Point(6, 19);
+            this.NetworkPingResultsListView.Name = "NetworkPingResultsListView";
+            this.NetworkPingResultsListView.Size = new System.Drawing.Size(357, 233);
+            this.NetworkPingResultsListView.TabIndex = 0;
+            this.NetworkPingResultsListView.UseCompatibleStateImageBehavior = false;
             // 
             // IpManagerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(635, 551);
+            this.ClientSize = new System.Drawing.Size(835, 553);
+            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.IpSchemeGroupBox);
@@ -565,6 +616,7 @@
             this.menuStrip1.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -615,5 +667,10 @@
         private GroupBox groupBox3;
         private ToolStripMenuItem openNetworkConnectionsToolStripMenuItem;
         private ToolStripSeparator toolStripSeparator1;
+        private Button PingNetworkButton;
+        private GroupBox groupBox1;
+        private ListView NetworkPingResultsListView;
+        private ToolStripSeparator toolStripSeparator2;
+        private ToolStripMenuItem launchOnWindowsStartToolStripMenuItem;
     }
 }

@@ -1,14 +1,14 @@
 ﻿namespace Indicon.Api.IpManager.Classes
 {
     [Serializable]
-    public sealed class Ipv4Address : IEquatable<Ipv4Address>
+    public sealed class Ipv4Address : IEquatable<Ipv4Address>, IComparable<Ipv4Address>
     {
         public string? Name { get; private set; }
-        public int[]? IpAddress { get; private set; }
+        public int[] IpAddress { get; private set; } = Array.Empty<int>();
         public string IpAddressString { get { return string.Join(".", IpAddress.Select(x => x.ToString())); } }
-        public int[]? SubnetMask { get; private set; }
+        public int[] SubnetMask { get; private set; } = Array.Empty<int>();
         public string SubnetMaskString { get { return string.Join(".", SubnetMask.Select(x => x.ToString())); } }
-        public int[]? Gateway { get; private set; }
+        public int[] Gateway { get; private set; } = Array.Empty<int>();
         public string GatewayString { get { return string.Join(".", Gateway.Select(x => x.ToString())); } }
         public string? NetworkInterfaceName { get; set; }
         public string? NetworkInterfaceMAC { get; set; } 
@@ -77,6 +77,27 @@
             else if (oObject1 == null || oObject2 == null) return false;
             else if (oObject1.Name == oObject2.Name) return true;
             else return false;
+        }
+        public int CompareTo(Ipv4Address? oOther)
+        {
+            if(oOther == null) return -1;
+            return string.Compare(Name, oOther.Name);
+        }
+        public int CompareTo(Ipv4Address? oObject1, Ipv4Address? oObject2)
+        {
+            if(oObject1 == null && oObject2 == null)
+            {
+                return 0;
+            }
+            if(oObject1 == null && oObject2 != null)
+            {
+                return -1;
+            }
+            if(oObject1 != null && oObject2 == null)
+            {
+                return 1;
+            }
+            return string.Compare(oObject1.Name, oObject2.Name);
         }
     }
 }

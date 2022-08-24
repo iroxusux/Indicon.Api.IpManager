@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-/// <summary>
+﻿/// <summary>
 /// Credit to original author
 /// Name: Daniel Schroder
 /// Alias: deadlydog
@@ -27,6 +25,10 @@ namespace Indicon.Api.IpManager.Classes
         /// <param name="append">If false the file will be overwritten if it already exists. If true the contents will be appended to the file.</param>
         public static void WriteToBinaryFile<T>(string filePath, T objectToWrite, bool append = false)
         {
+            if(filePath == null || filePath == string.Empty || objectToWrite == null)
+            {
+                return;
+            }
             using (Stream stream = File.Open(filePath, append ? FileMode.Append : FileMode.Create))
             {
                 var binaryFormatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
@@ -40,8 +42,12 @@ namespace Indicon.Api.IpManager.Classes
         /// <typeparam name="T">The type of object to read from the XML.</typeparam>
         /// <param name="filePath">The file path to read the object instance from.</param>
         /// <returns>Returns a new instance of the object read from the binary file.</returns>
-        public static T ReadFromBinaryFile<T>(string filePath)
+        public static T? ReadFromBinaryFile<T>(string filePath)
         {
+            if (filePath == null || filePath == string.Empty)
+            {
+                return default;
+            }
             using (Stream stream = File.Open(filePath, FileMode.Open))
             {
                 var binaryFormatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();

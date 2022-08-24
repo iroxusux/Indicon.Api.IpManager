@@ -10,9 +10,17 @@ namespace Indicon.Api.IpManager
         [STAThread]
         static void Main()
         {
+            /// Before we do anything at all, check if the same process already exists as a running process. If true, exit the environment (we don't want 2 programs running at the same time, especially for file control)
+            var exists = System.Diagnostics.Process.GetProcessesByName(System.IO.Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetEntryAssembly().Location)).Count() > 1;
+            if (exists)
+            {
+                Environment.Exit(0);
+            }
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
+
+            /// Configure and run application
             IpManagerForm oForm = new();
             StaticIpManager.Init(ref oForm);
             Application.Run(oForm);

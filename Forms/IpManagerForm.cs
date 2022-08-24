@@ -1,4 +1,6 @@
-﻿using System.Net.NetworkInformation;
+﻿using System.Diagnostics;
+using System.Net;
+using System.Net.NetworkInformation;
 using Indicon.Api.IpManager.Classes;
 
 namespace Indicon.Api.IpManager.Forms
@@ -35,6 +37,14 @@ namespace Indicon.Api.IpManager.Forms
             IpConfigListView.Columns.Add("Gateway", -2, HorizontalAlignment.Left);
             IpConfigListView.Columns.Add("Network Interface", -2, HorizontalAlignment.Left);
 
+            /// Prepare list view (Network Pinging)
+            NetworkPingResultsListView.View = View.Details;
+            NetworkPingResultsListView.GridLines = true;
+            NetworkPingResultsListView.FullRowSelect = true;
+            NetworkPingResultsListView.Columns.Add("IP Address", -2, HorizontalAlignment.Left);
+            NetworkPingResultsListView.Columns.Add("MAC Address", -2, HorizontalAlignment.Left);
+            NetworkPingResultsListView.Columns.Add("Vendor", -2, HorizontalAlignment.Left);
+
             /// Setup context menu strip
             ContextMenuStrip oStripBuilder = new ContextMenuStrip();
             var oEditEntry = oStripBuilder.Items.Add("Edit Entry", null, new EventHandler(CmEditEntry));
@@ -44,6 +54,9 @@ namespace Indicon.Api.IpManager.Forms
             /// Setup combo box
             AdapterComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             AdapterComboBoxDHCP.DropDownStyle = ComboBoxStyle.DropDownList;
+
+            /// Setup "checked" state of run on startup
+            launchOnWindowsStartToolStripMenuItem.Checked = StaticIpManager.GetStartup();
         }
         public void UpdateIpList(Ipv4Address[] oElements)
         {
@@ -60,6 +73,30 @@ namespace Indicon.Api.IpManager.Forms
             IpConfigListView.Sorting = SortOrder.Ascending;
             IpConfigListView.Sort();
             UpdateTrayContextMenuStrip(oElements);
+        }
+        public void PublishNetworkPingResults(IPAddress[] sFoundAddresses)
+        {
+            NetworkPingResultsListView.Items.Clear();
+            for(int i = 0; i < sFoundAddresses.Length; i++)
+            {
+                ListViewItem oItem = new ListViewItem() { Name = sFoundAddresses[i].MapToIPv4().ToString(), Text = sFoundAddresses[i].MapToIPv4().ToString() };
+                byte[] oMacBytes = NativeWindowsFunctions.GetMacAddress(sFoundAddresses[i]);
+                if(oMacBytes != null)
+                {
+                    string sMacString = string.Join(":", oMacBytes.Select(x => x.ToString("X")));
+                    oItem.SubItems.Add(sMacString);
+                    oItem.SubItems.Add(XmlReader.GetVendorByMac(sMacString));
+                    NetworkPingResultsListView.Items.Add(oItem);
+                }
+                else
+                {
+                    MessageBox.Show($"Unable to fetch MAC address for the following item: {sFoundAddresses}.", "Invalid MAC Query");
+                }
+                
+            }
+            NetworkPingResultsListView.Sorting = SortOrder.Ascending;
+            NetworkPingResultsListView.Sort();
+            MessageBox.Show("Complete!", "Ping Network Command");
         }
         private void IpSchemeTextBoxChanged(object sender, EventArgs e)
         {
@@ -91,6 +128,7 @@ namespace Indicon.Api.IpManager.Forms
         }
         private void IpSchemeTextBoxKeyDown(object sender, KeyEventArgs e)
         {
+            /// Determine if object is valid for parsing
             TextBox oTextBox = sender as TextBox;
             if (oTextBox == null)
             {
@@ -101,6 +139,24 @@ namespace Indicon.Api.IpManager.Forms
                 NextIpSchemeControl(oTextBox);
                 e.SuppressKeyPress = true;
             }
+
+            /// Check for non-numeric value being entered (and also not "back" or backspace)
+            if(e.KeyCode < Keys.D0 || e.KeyCode > Keys.D9)
+            {
+                if (e.KeyCode < Keys.NumPad0 || e.KeyCode > Keys.NumPad9)
+                {
+                    if(e.KeyCode != Keys.Back)
+                    {
+                        e.SuppressKeyPress = true;
+                    }
+                }
+            }
+            /// Shift being pressed here will also be NaN
+            if(e.Modifiers == Keys.Shift)
+            {
+                e.SuppressKeyPress = true;
+            }
+            
         }
         private void NextIpSchemeControl(Control oControl)
         {
@@ -143,13 +199,13 @@ namespace Indicon.Api.IpManager.Forms
                 {
                     if(oTextBox.Text == String.Empty)
                     {
-                        MessageBox.Show("All fields must be complete before committing a new IP scheme!");
+                        MessageBox.Show("All fields must be complete before committing a new IP scheme!", "Failed To Add Scheme!");
                         return false;
                     }
                 }
                 if(AdapterComboBox.SelectedItem == null)
                 {
-                    MessageBox.Show("Adapter must be selected before committing a new IP scheme!");
+                    MessageBox.Show("Adapter must be selected before committing a new IP scheme!", "Failed To Add Scheme!");
                     return false;
                 }
             }
@@ -164,7 +220,7 @@ namespace Indicon.Api.IpManager.Forms
         {
             if (IpConfigListView.SelectedItems.Count == 0)
             {
-                MessageBox.Show("No network configuration selected!");
+                MessageBox.Show("No network configuration selected!", "Failed To Apply Network Configuration!");
                 return;
             }
             Ipv4Address? oAddress = IpConfigListView.SelectedItems[0].Tag as Ipv4Address;
@@ -336,8 +392,10 @@ namespace Indicon.Api.IpManager.Forms
                 if(oInterface != null)
                 {
                     StaticIpManager.SetDHCPScheme(oInterface.GetPhysicalAddress().ToString());
+                    return;
                 }
             }
+            MessageBox.Show("No network adapter selected!", "Failed To Apply Network Configuration!");
         }
         private void RestoreWindow(object sender, EventArgs e)
         {
@@ -348,6 +406,34 @@ namespace Indicon.Api.IpManager.Forms
         private void OpenNetworkConnections_Click(object sender, EventArgs e)
         {
             StaticIpManager.OpenNetworkConnectionsPanel();
+        }
+        private void PingNetworkButtonClick(object sender, MouseEventArgs e)
+        {
+            NetworkInterface? oInterface = null;
+            ComboBoxItem? oItem = AdapterComboBoxDHCP.SelectedItem as ComboBoxItem;
+            if (oItem == null)
+            {
+                MessageBox.Show("No network adapter selected!", "Failed Ping Request!");
+                return;
+            }
+            oInterface = oItem.Tag as NetworkInterface;
+            if (oInterface == null)
+            {
+                MessageBox.Show("No network adapter selected!", "Failed Ping Request!");
+                return;
+            }
+            StaticIpManager.PingAdapterNetwork(oInterface);
+        }
+
+        private void LaunchOnWindowsStart_Click(object sender, EventArgs e)
+        {
+            ToolStripMenuItem? oItem = sender as ToolStripMenuItem;
+            if(oItem == null)
+            {
+                return;
+            }
+            StaticIpManager.SetStartup(!oItem.Checked);
+            oItem.Checked = !oItem.Checked;
         }
     }
     public class IpAddressCommitEventArgs : EventArgs
