@@ -23,8 +23,7 @@ namespace Indicon.Api.IpManager.Classes
                 {
                     continue;
                 }
-                VendorOUI oVendor = new VendorOUI() { MAC = oNode.Attributes["mac_prefix"]?.InnerText, Name = oNode.Attributes["vendor_name"]?.InnerText };
-                VendorMacRelations.Add(oVendor);
+                VendorMacRelations.Add(new VendorOUI() { MAC = oNode.Attributes["mac_prefix"]?.InnerText, Name = oNode.Attributes["vendor_name"]?.InnerText });
             }
         }
         public static string? GetVendorByMac(string sMAC)

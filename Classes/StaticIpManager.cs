@@ -11,6 +11,7 @@ namespace Indicon.Api.IpManager.Classes
         {
             public NotifyMessages() { }
             internal static readonly ErrorCode NoFileFound = new(10_000, "No Save File Found", "No save file was found for this tool. A new save file is being created at the target directory!");
+            internal static readonly ErrorCode NoPingAdapter = new(10_000, "Cannot ping network!", "No valid IP address associated with selected Network Adapter. Please verify network is enabled and cable is plugged in!");
         }
         private struct ErrorCodes
         {
@@ -31,8 +32,6 @@ namespace Indicon.Api.IpManager.Classes
 
         public static void Init(ref IpManagerForm oForm)
         {
-            /// Validate directories are ok
-            CheckDirs();
             /// Bind form
             if(oForm != null)
             {
@@ -42,6 +41,8 @@ namespace Indicon.Api.IpManager.Classes
             {
                 NotifyHandler.FatalError(ErrorCodes.NullFormFault);
             }
+            /// Validate directories are ok
+            CheckDirs();
             /// Load from file (if exists) else we will recompile whatever is needed
             Load();
             /// Initialize Xml Vendor Static Class
@@ -51,7 +52,7 @@ namespace Indicon.Api.IpManager.Classes
         }
         public static void CreateNewIp(object sender, IpAddressCommitEventArgs oArgs)
         {
-            Ipv4Address oIpAddress = new Ipv4Address();
+            Ipv4Address oIpAddress = new();
             oIpAddress.SetName(oArgs.Name);
             oIpAddress.SetIpAddress(oArgs.IpAddress);
             oIpAddress.SetSubnetMask(oArgs.SubnetMask);
@@ -82,8 +83,8 @@ namespace Indicon.Api.IpManager.Classes
             string[] sIP = new string[1] { oAddress.IpAddressString };
             string[] sSubnet = new string[1] { oAddress.SubnetMaskString };
             string[] sGateway = new string[1] { oAddress.GatewayString };
-            bool bSuccess = NetworkManager.SetNICStatic(oAddress.NetworkInterfaceMAC, sIP, sSubnet, sGateway, string.Empty);
-            if (bSuccess)
+            (uint, uint, uint) oResponse = NetworkManager.SetNICStatic(oAddress.NetworkInterfaceMAC, sIP, sSubnet, sGateway, string.Empty);
+            if (oResponse.Item1 == 0 && oResponse.Item2 == 0 && oResponse.Item3 == 0)
             {
                 MessageBox.Show("Success!", "Set Static");
             }
@@ -104,29 +105,30 @@ namespace Indicon.Api.IpManager.Classes
                 MessageBox.Show("Failure!", "Set DHCP");
             }
         }
-        public static void PingNetwork(Ipv4Address oAddress)
-        {
-            NetworkManager.PingNetwork(oAddress.IpAddressString, oAddress.SubnetMaskString);
-        }
         public static void PingAdapterNetwork(NetworkInterface oInterface)
         {
             
-            (string sIP, string sSubnet) = NetworkManager.GetNetworkInterfaceCardIpAddress(oInterface.GetPhysicalAddress().ToString());
+            (string sIP, string sSubnet) = NetworkManager.GetNetworkInterfaceIpAddress(oInterface.GetPhysicalAddress().ToString());
             if (sIP == null || sSubnet == null)
             {
-                MessageBox.Show("Cannot ping network! No valid IP address associated with selected Network Adapter. Please verify network is enabled and cable is plugged in!", "Unable To Ping Network!");
+                NotifyHandler.GeneralNotification(NotifyMessages.NoPingAdapter);
                 return;
             }
+            NetworkManager.PingUpdated += new EventHandler<NetworkManager.PingResultEventArgs>(OnPingUpdated);
             NetworkManager.PingNetwork(sIP, sSubnet);
+            NetworkManager.PingUpdated -= new EventHandler<NetworkManager.PingResultEventArgs>(OnPingUpdated);
         }
         public static void OpenNetworkConnectionsPanel()
         {
-            ProcessStartInfo startInfo = new ProcessStartInfo("NCPA.cpl") { UseShellExecute = true };
+            ProcessStartInfo startInfo = new("NCPA.cpl") { UseShellExecute = true };
             Process.Start(startInfo);
         }
-        public static void PulishNetworkPingResults(IPAddress[] oFoundAddresses)
+        private static void OnPingUpdated(object sender, NetworkManager.PingResultEventArgs e)
         {
-            BoundForm?.PublishNetworkPingResults(oFoundAddresses);
+            if(e.Address != null)
+            {
+                BoundForm?.AddPingResult(e.Address);
+            }
         }
         public static void SetStartup(bool bEnable)
         {

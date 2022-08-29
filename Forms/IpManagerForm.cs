@@ -98,6 +98,33 @@ namespace Indicon.Api.IpManager.Forms
             NetworkPingResultsListView.Sort();
             MessageBox.Show("Complete!", "Ping Network Command");
         }
+        public void AddPingResult(IPAddress oAddress)
+        {
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke((MethodInvoker)delegate
+                {
+                    AddPingResult(oAddress);
+                });
+                return;
+            }
+            ListViewItem oItem = new ListViewItem() { Name = oAddress.MapToIPv4().ToString(), Text = oAddress.MapToIPv4().ToString() };
+            byte[] oMacBytes = NativeWindowsFunctions.GetMacAddress(oAddress);
+            if(oMacBytes != null)
+            {
+                string sMac = string.Join(":", oMacBytes.Select(x => x.ToString("X")));
+                oItem.SubItems.Add(sMac);
+                oItem.SubItems.Add(XmlReader.GetVendorByMac(sMac));
+                NetworkPingResultsListView.Items.Add(oItem);
+                NetworkPingResultsListView.Sorting = SortOrder.Ascending;
+                NetworkPingResultsListView.Sort();
+            }
+
+        }
+        public void ClearPingResults()
+        {
+            NetworkPingResultsListView.Items.Clear();
+        }
         private void IpSchemeTextBoxChanged(object sender, EventArgs e)
         {
             TextBox oTextBox = sender as TextBox;
@@ -407,7 +434,7 @@ namespace Indicon.Api.IpManager.Forms
         {
             StaticIpManager.OpenNetworkConnectionsPanel();
         }
-        private void PingNetworkButtonClick(object sender, MouseEventArgs e)
+        private async void PingNetworkButtonClick(object sender, MouseEventArgs e)
         {
             NetworkInterface? oInterface = null;
             ComboBoxItem? oItem = AdapterComboBoxDHCP.SelectedItem as ComboBoxItem;
@@ -422,7 +449,7 @@ namespace Indicon.Api.IpManager.Forms
                 MessageBox.Show("No network adapter selected!", "Failed Ping Request!");
                 return;
             }
-            StaticIpManager.PingAdapterNetwork(oInterface);
+            await Task.Factory.StartNew(() => StaticIpManager.PingAdapterNetwork(oInterface));
         }
 
         private void LaunchOnWindowsStart_Click(object sender, EventArgs e)

@@ -99,15 +99,15 @@ namespace Indicon.Api.IpManager.Classes
             if (matchingItem == null)
             {
                 var message = string.Format("'{0}' is not a valid {1} in {2}", value, description, typeof(T));
-                throw new ApplicationException(message);
+                throw new InvalidCastException(message);
             }
 
             return matchingItem;
         }
 
-        public int CompareTo(object other)
+        public int CompareTo(object obj)
         {
-            return Value.CompareTo(((Enumeration)other).Value);
+            return Value.CompareTo(((Enumeration)obj).Value);
         }
     }
 }

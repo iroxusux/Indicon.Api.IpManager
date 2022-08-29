@@ -1,4 +1,4 @@
-﻿    using System.Management;
+﻿using System.Management;
 using System.Net.NetworkInformation;
 using System.Diagnostics;
 using System.Net;
@@ -7,7 +7,28 @@ namespace Indicon.Api.IpManager.Classes
 {
     internal static class NetworkManager
     {
-        private static NetworkInterface GetNetworkInterface(string sMAC)
+        /// <summary>
+        /// Public Event Handler
+        /// Notify Any Calling Object That A Ping Result Has Been Published
+        /// </summary>
+        public static event EventHandler<PingResultEventArgs> PingUpdated = delegate { };
+        /// <summary>
+        /// Static Delegated Method
+        /// Asyncronously Call Delegate Methods On Ping Results Complete
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private static void OnPingUpdated(object sender, PingResultEventArgs e)
+        {
+            EventHandler<PingResultEventArgs> oHandler = PingUpdated;
+            oHandler?.Invoke(sender, e);
+        }
+        /// <summary>
+        /// Get Network Interface By MAC Of NIC
+        /// </summary>
+        /// <param name="sMAC"></param>
+        /// <returns></returns>
+        private static NetworkInterface? GetNetworkInterface(string sMAC)
         {
             foreach(NetworkInterface oNetwork in NetworkInterface.GetAllNetworkInterfaces())
             {
@@ -18,9 +39,14 @@ namespace Indicon.Api.IpManager.Classes
             }
             return null;
         }
-        private static ManagementObject GetNetworkInterfaceManagementObject(string sMAC)
+        /// <summary>
+        /// Get Management Object Of NIC
+        /// </summary>
+        /// <param name="sMAC"></param>
+        /// <returns></returns>
+        private static ManagementObject? GetNetworkInterfaceManagementObject(string sMAC)
         {
-            NetworkInterface oNetwork = GetNetworkInterface(sMAC);
+            NetworkInterface? oNetwork = GetNetworkInterface(sMAC);
             if(oNetwork == null)
             {
                 return null;
@@ -36,39 +62,53 @@ namespace Indicon.Api.IpManager.Classes
             }
             return null;
         }
-        public static bool SetNICStatic(string sMAC, string[] sIP, string[] sSubnet, string[] sGateway, string sDNS)
+        /// <summary>
+        /// Set IP Address (Ipv4) Properties Of NIC To Static Values Passed
+        /// </summary>
+        /// <param name="sMAC"></param>
+        /// <param name="sIP"></param>
+        /// <param name="sSubnet"></param>
+        /// <param name="sGateway"></param>
+        /// <param name="sDNS"></param>
+        /// <returns></returns>
+        public static (uint, uint, uint) SetNICStatic(string sMAC, string[] sIP, string[] sSubnet, string[] sGateway, string sDNS)
         {
             try
             {
-                ManagementObject oManager = GetNetworkInterfaceManagementObject(sMAC);
+                ManagementObject? oManager = GetNetworkInterfaceManagementObject(sMAC);
                 if(oManager == null)
                 {
-                    return false;
+                    return (997, 997, 997);
                 }
                 if (!IsNetworkEnabled(oManager))
                 {
                     MessageBox.Show("This adapter cannot be configured!\n'IP NOT ENABLED'\nPlease plug a cable into the adapter or enable IP!", "Cannot update adapter!");
-                    return false;
+                    return (998, 998, 998);
                 }
                 /// Set IP Address To NIC Card
-                uint iIpRetVal = SetNetworkInterfaceCardIpAddress(oManager, sIP, sSubnet);
+                uint iIpRetVal = SetNetworkInterfaceIpAddress(oManager, sIP, sSubnet);
                 /// Set Gateway Address To NIC Card
-                uint iGatewayRetVal = SetNetworkInterfaceCardGateway(oManager, sIP, sGateway);
+                uint iGatewayRetVal = SetNetworkInterfaceGateway(oManager, sIP, sGateway);
                 /// Set DNS To NIC Card - NOT USED
-                uint iDnsRetVal = SetNetworkInterfaceCardDNS(oManager, sDNS);
-                return true;
+                uint iDnsRetVal = SetNetworkInterfaceDNS(oManager, sDNS);
+                return (iIpRetVal, iGatewayRetVal, iDnsRetVal);
             }
             catch(Exception e)
             {
                 Debug.WriteLine(e.Message);
-                return false;
+                return (999, 999, 999);
             }
         }
+        /// <summary>
+        /// Set IP Address (Ipv4) Properties Of NIC To DHCP
+        /// </summary>
+        /// <param name="sMAC"></param>
+        /// <returns></returns>
         public static (uint, uint) SetNICDHCP(string sMAC)
         {
             try
             {
-                ManagementObject oManager = GetNetworkInterfaceManagementObject(sMAC);
+                ManagementObject? oManager = GetNetworkInterfaceManagementObject(sMAC);
                 if (oManager == null)
                 {
                     Debug.WriteLine("No Management Object Found For NIC Card");
@@ -94,9 +134,15 @@ namespace Indicon.Api.IpManager.Classes
                 return (999, 999);
             }
         }
+        /// <summary>
+        /// Validate MAC Octet - If Length Is Oversize, Return Empty String
+        /// If Length Is Too Small, Add Length And Return
+        /// </summary>
+        /// <param name="sMacOctet"></param>
+        /// <returns></returns>
         public static string ValidateMacOctet(string sMacOctet)
         {
-            if(sMacOctet == null || sMacOctet.Length > 3)
+            if(sMacOctet == null || sMacOctet.Length > 2)
             {
                 return string.Empty;
             }
@@ -106,7 +152,15 @@ namespace Indicon.Api.IpManager.Classes
             }
             return sMacOctet;
         }
-        private static uint SetNetworkInterfaceCardIpAddress(ManagementObject oManager, string[] sIP, string[] sSubnet)
+        /// <summary>
+        /// Common Function
+        /// Set IP Address Of NIC
+        /// </summary>
+        /// <param name="oManager"></param>
+        /// <param name="sIP"></param>
+        /// <param name="sSubnet"></param>
+        /// <returns></returns>
+        private static uint SetNetworkInterfaceIpAddress(ManagementObject oManager, string[] sIP, string[] sSubnet)
         {
             /// Set IP Protocol Address
             ManagementBaseObject oIP = oManager.GetMethodParameters("EnableStatic");
@@ -114,7 +168,15 @@ namespace Indicon.Api.IpManager.Classes
             oIP["SubnetMask"] = sSubnet;
             return (uint)oManager.InvokeMethod("EnableStatic", oIP, null)["ReturnValue"];
         }
-        private static uint SetNetworkInterfaceCardGateway(ManagementObject oManager, string[] sIP, string[] sGateway)
+        /// <summary>
+        /// Common Function
+        /// Set Gateway Of NIC
+        /// </summary>
+        /// <param name="oManager"></param>
+        /// <param name="sIP"></param>
+        /// <param name="sGateway"></param>
+        /// <returns></returns>
+        private static uint SetNetworkInterfaceGateway(ManagementObject oManager, string[] sIP, string[] sGateway)
         {
             /// Set Gateway
             ManagementBaseObject oGateway = oManager.GetMethodParameters("SetGateways");
@@ -129,20 +191,38 @@ namespace Indicon.Api.IpManager.Classes
             }
             return (uint)oManager.InvokeMethod("SetGateways", oGateway, null)["ReturnValue"];
         }
-        private static uint SetNetworkInterfaceCardDNS(ManagementObject oManager, string sDNS)
+        /// <summary>
+        /// Common Function
+        /// Set DNS Of NIC
+        /// (Unused At This Time)
+        /// </summary>
+        /// <param name="oManager"></param>
+        /// <param name="sDNS"></param>
+        /// <returns></returns>
+        private static uint SetNetworkInterfaceDNS(ManagementObject oManager, string sDNS)
         {
             return 0;  /// This method is not used nor has it been debugged / tested - do not modify DNS as of now
             ManagementBaseObject oDNS = oManager.GetMethodParameters("SetDNSServerSearchOrder");
             oDNS["DNSServerSearchOrder"] = new string[] { sDNS };
             return (uint)oManager.InvokeMethod("SetDNSServerSearchOrder", oDNS, null)["ReturnValue"];
         }
-        public static (string, string) GetNetworkInterfaceCardIpAddress(string sMAC)
+        /// <summary>
+        /// Retreive Ipv4 Address Of NIC Card
+        /// </summary>
+        /// <param name="sMAC"></param>
+        /// <returns></returns>
+        public static (string, string) GetNetworkInterfaceIpAddress(string sMAC)
         {
             ManagementObject oManager = GetNetworkInterfaceManagementObject(sMAC);
-            return GetNetworkInterfaceCardIpAddress(oManager);
+            return GetNetworkInterfaceIpAddress(oManager);
             
         }
-        public static (string, string) GetNetworkInterfaceCardIpAddress(ManagementObject oManager)
+        /// <summary>
+        /// Retreive Ipv4 Address Of NIC Card
+        /// </summary>
+        /// <param name="oManager"></param>
+        /// <returns></returns>
+        public static (string, string) GetNetworkInterfaceIpAddress(ManagementObject oManager)
         {
             if(oManager == null)
             {
@@ -156,11 +236,20 @@ namespace Indicon.Api.IpManager.Classes
             }
             return (IPInformation[0], SubnetInformation[0]);
         }
-        public static bool PingNetwork(string sIP, string sSubnet)
+        /// <summary>
+        /// With A Provided IP & Subnet, Ping A Network For Devices
+        /// </summary>
+        /// <param name="sIP"></param>
+        /// <param name="sSubnet"></param>
+        public static void PingNetwork(string sIP, string sSubnet)
         {
-            NetworkScanner.PingNetwork(sIP, sSubnet);
-            return true;
+            NetworkScanner.TryPingNetwork(sIP, sSubnet);
         }
+        /// <summary>
+        /// Helper Function - Check If NIC Network Is Enabled
+        /// </summary>
+        /// <param name="oManager"></param>
+        /// <returns></returns>
         public static bool IsNetworkEnabled(ManagementObject oManager)
         {
             if(oManager == null)
@@ -169,17 +258,24 @@ namespace Indicon.Api.IpManager.Classes
             }
             return (bool)oManager["IPEnabled"];
         }        
+        /// <summary>
+        /// Private Class To Manage Scanning Of Network For Pings
+        /// </summary>
         private static class NetworkScanner
         {
-            private static List<Pinger> Pingers = new List<Pinger>();
-            private static List<IPAddress> SuccessfulAddresses = new List<IPAddress>();
+            private static List<Pinger> Pingers = new();
             private static int Instances = 0;
-            private static object @lock = new object();
+            private static object @lock = new();
             private static int TimeOut = 250;
             private const int OCTET_COUNT = 4;
             private static bool Busy = false;
 
-            internal static void PingNetwork(string sIP, string sSubnet)
+            /// <summary>
+            /// Attempt To Ping Provided Network
+            /// </summary>
+            /// <param name="sIP"></param>
+            /// <param name="sSubnet"></param>
+            internal static void TryPingNetwork(string sIP, string sSubnet)
             {
                 if (Busy)
                 {
@@ -187,7 +283,6 @@ namespace Indicon.Api.IpManager.Classes
                 }
                 Busy = true;
                 Pingers = new List<Pinger>();
-                SuccessfulAddresses = new List<IPAddress>();
                 CreatePings(GetPingableAddressesFromNetwork(sIP, sSubnet));
                 Instances = Pingers.Count;
                 foreach(Pinger oPinger in Pingers)
@@ -195,13 +290,19 @@ namespace Indicon.Api.IpManager.Classes
                     oPinger.Ping.SendAsync(oPinger.NetworkAddress, TimeOut, new object());
                 }
             }
+            /// <summary>
+            /// Given An Ipv4 Addrss And Subnet - Calculate Available Addresses To Attempt To Ping
+            /// </summary>
+            /// <param name="sIP"></param>
+            /// <param name="sSubnet"></param>
+            /// <returns></returns>
             private static string[] GetPingableAddressesFromNetwork(string sIP, string sSubnet)
             {
                 string[] sIpOctets = sIP.Split(".");
                 string[] sSubnetOctets = sSubnet.Split(".");
                 int[] iIpOctets = new int[OCTET_COUNT];
                 int[] iSubnetOctets = new int[OCTET_COUNT];
-                List<string> oObserableIps = new List<string>();
+                List<string> oObserableIps = new();
                 if (sIpOctets.Length != OCTET_COUNT || sSubnetOctets.Length != OCTET_COUNT)
                 {
                     return Array.Empty<string>();
@@ -230,15 +331,22 @@ namespace Indicon.Api.IpManager.Classes
                     return Array.Empty<string>();
                 }
             }
+            /// <summary>
+            /// Compile Array Of Addresses Into Pingers
+            /// </summary>
+            /// <param name="sIPAddresses"></param>
             private static void CreatePings(string[] sIPAddresses)
             {
                 for (int i = 0; i < sIPAddresses.Length; i++)
                 {
-                    Pinger oPinger = new Pinger { Ping = new Ping(), NetworkAddress = sIPAddresses[i] };
+                    Pinger oPinger = new() { Ping = new Ping(), NetworkAddress = sIPAddresses[i] };
                     oPinger.Ping.PingCompleted += new PingCompletedEventHandler(OnPingComplete);
                     Pingers.Add(oPinger);
                 }
             }
+            /// <summary>
+            /// Unbind Delegates And Remove Pinger From List
+            /// </summary>
             private static void DestroyPings()
             {
                 foreach(Pinger oPinger in Pingers)
@@ -248,32 +356,47 @@ namespace Indicon.Api.IpManager.Classes
                 }
                 Pingers.Clear();
             }
-            private static void PublishResults()
+            private static void Finish()
             {
-                StaticIpManager.PulishNetworkPingResults(SuccessfulAddresses.ToArray());
                 Busy = false;
             }
+            /// <summary>
+            /// Thread Target Function
+            /// Buffer Ping Replies If Successful, Manage Instances
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="oArgs"></param>
             private static void OnPingComplete(object sender, PingCompletedEventArgs oArgs)
             {
                 lock (@lock)
                 {
                     Instances -= 1;
-                    if (oArgs.Reply.Status == IPStatus.Success)
+                    if (oArgs.Reply?.Status == IPStatus.Success)
                     {
-                        SuccessfulAddresses.Add(oArgs.Reply.Address);
+                        OnPingUpdated(null, new PingResultEventArgs() { Address = oArgs.Reply.Address});
                     }
                     if (Instances == 0)
                     {
-                        PublishResults();
                         DestroyPings();
+                        Finish();
                     }
                 }  
             }
         }
+        /// <summary>
+        /// Helper Struct
+        /// </summary>
         private struct Pinger
         {
             public Ping Ping { get; set; }
             public string NetworkAddress { get; set; }
+        }
+        /// <summary>
+        /// Event Class For Asnycronous Publishing Of Ping Results
+        /// </summary>
+        public class PingResultEventArgs : EventArgs
+        {
+            public IPAddress Address { get; set; }
         }
     }
 }

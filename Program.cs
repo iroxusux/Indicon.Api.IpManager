@@ -11,7 +11,7 @@ namespace Indicon.Api.IpManager
         static void Main()
         {
             /// Before we do anything at all, check if the same process already exists as a running process. If true, exit the environment (we don't want 2 programs running at the same time, especially for file control)
-            var exists = System.Diagnostics.Process.GetProcessesByName(System.IO.Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetEntryAssembly().Location)).Count() > 1;
+            var exists = System.Diagnostics.Process.GetProcessesByName(Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetEntryAssembly().Location)).Length > 1;
             if (exists)
             {
                 Environment.Exit(0);
@@ -21,8 +21,8 @@ namespace Indicon.Api.IpManager
             ApplicationConfiguration.Initialize();
 
             /// Configure and run application
-            IpManagerForm oForm = new();
-            StaticIpManager.Init(ref oForm);
+            IpManagerForm oForm = new();  // The view
+            StaticIpManager.Init(ref oForm);  // The view model
             Application.Run(oForm);
         }
     }
