@@ -401,7 +401,7 @@
             this.SaveSchemeButton.TabIndex = 34;
             this.SaveSchemeButton.Text = "Save Scheme";
             this.SaveSchemeButton.UseVisualStyleBackColor = true;
-            this.SaveSchemeButton.Click += new System.EventHandler(this.OnCommit_Click);
+            this.SaveSchemeButton.Click += new System.EventHandler(this.OnSchemeCommit_Click);
             // 
             // label13
             // 
@@ -444,7 +444,7 @@
             this.ApplyButton.TabIndex = 35;
             this.ApplyButton.Text = "Apply Static";
             this.ApplyButton.UseVisualStyleBackColor = true;
-            this.ApplyButton.Click += new System.EventHandler(this.OnApply_Click);
+            this.ApplyButton.Click += new System.EventHandler(this.OnApplyStatic_Click);
             // 
             // IpConfigListView
             // 
@@ -475,7 +475,7 @@
             this.ApplyDHCPButton.TabIndex = 36;
             this.ApplyDHCPButton.Text = "Apply DHCP";
             this.ApplyDHCPButton.UseVisualStyleBackColor = true;
-            this.ApplyDHCPButton.Click += new System.EventHandler(this.SetDHCPButton_Click);
+            this.ApplyDHCPButton.Click += new System.EventHandler(this.OnApplyDHCP_Click);
             // 
             // SystemTrayNotifyIcon
             // 

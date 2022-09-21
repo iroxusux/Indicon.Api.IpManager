@@ -257,7 +257,53 @@ namespace Indicon.Api.IpManager.Classes
                 return false;
             }
             return (bool)oManager["IPEnabled"];
-        }        
+        }
+        /// <summary>
+        /// Set IP Address Of NIC Using Netshell instead of Win32 commands
+        /// A deficiency in Windows Dll keeps from settings addresses to network cards that are not plugged in physically
+        /// </summary>
+        /// <param name="oInterface"></param>
+        /// <param name="sIP"></param>
+        /// <param name="sSubnet"></param>
+        /// <param name="sGateway"></param>
+        /// <returns></returns>
+        public static bool SetNICStaticNetsh(string sMAC, string sIP, string sSubnet, string? sGateway = null)
+        {
+            NetworkInterface? oInterface = GetNetworkInterface(sMAC);
+            if (oInterface == null) return false;
+            var oIpProperties = oInterface.GetIPProperties();
+            var oIpInfo = oIpProperties.UnicastAddresses.FirstOrDefault(ip => ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+            var oCurrentIp = oIpInfo.Address.ToString();
+            var oCurrentSubnet = oIpInfo.IPv4Mask.ToString();
+            var oDhcpEnabled = oIpProperties.GetIPv4Properties().IsDhcpEnabled;
+            if (!oDhcpEnabled && oCurrentIp == sIP && oCurrentSubnet == sSubnet) return true;
+            var oProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo("netsh", $"interface ip set address \"{oInterface.Name}\" static {sIP} {sSubnet}" + (string.IsNullOrEmpty(sGateway) ? "" : $" {sGateway} 1")) { Verb = "runas" }
+            };
+            oProcess.Start();
+            oProcess.WaitForExit();
+            var oSuccess = oProcess.ExitCode == 0;
+            oProcess.Dispose();
+            return oSuccess;
+        }
+        public static bool SetNICDhcpNetsh(string sMAC)
+        {
+            NetworkInterface? oInterface = GetNetworkInterface(sMAC);
+            if (oInterface == null) return false;
+            var oIpProperties = oInterface.GetIPProperties();
+            var oDhcpEnabled = oIpProperties.GetIPv4Properties().IsDhcpEnabled;
+            if (oDhcpEnabled) return true;
+            var oProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo("netsh", $"interface ip set address \"{oInterface.Name}\" dhcp") { Verb = "runas" }
+            };
+            oProcess.Start();
+            oProcess.WaitForExit();
+            var oSuccess = oProcess.ExitCode == 0;
+            oProcess.Dispose();
+            return oSuccess;
+        }
         /// <summary>
         /// Private Class To Manage Scanning Of Network For Pings
         /// </summary>
@@ -265,8 +311,9 @@ namespace Indicon.Api.IpManager.Classes
         {
             private static List<Pinger> Pingers = new();
             private static int Instances = 0;
+            private static int PingInstances = 0;
             private static object @lock = new();
-            private static int TimeOut = 250;
+            private static int TimeOut = 1000;
             private const int OCTET_COUNT = 4;
             private static bool Busy = false;
 
@@ -281,6 +328,7 @@ namespace Indicon.Api.IpManager.Classes
                 {
                     return;
                 }
+                PingInstances = 0;
                 Busy = true;
                 Pingers = new List<Pinger>();
                 CreatePings(GetPingableAddressesFromNetwork(sIP, sSubnet));
@@ -337,6 +385,7 @@ namespace Indicon.Api.IpManager.Classes
             /// <param name="sIPAddresses"></param>
             private static void CreatePings(string[] sIPAddresses)
             {
+                PingInstances = sIPAddresses.Length;
                 for (int i = 0; i < sIPAddresses.Length; i++)
                 {
                     Pinger oPinger = new() { Ping = new Ping(), NetworkAddress = sIPAddresses[i] };
@@ -359,6 +408,8 @@ namespace Indicon.Api.IpManager.Classes
             private static void Finish()
             {
                 Busy = false;
+                PingUpdated = delegate { };
+                MessageBox.Show($"Network Ping Complete!\nAddresses Pinged: {PingInstances}");
             }
             /// <summary>
             /// Thread Target Function

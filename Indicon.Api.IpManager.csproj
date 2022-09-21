@@ -13,11 +13,36 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Classes\StaticIpManager.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="vendorMacs.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="_default.ico" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Management" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="vendorMacs.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Engine.Forms\Engine.Forms.csproj" />
+    <ProjectReference Include="..\Engine\Engine.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Engine">
+      <HintPath>..\Engine\bin\Debug\net6.0-windows\Engine.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

@@ -40,7 +40,7 @@ namespace Indicon.Api.IpManager.Classes
               + ((uint)addressBytes[0]);
             if (SendARP(dest, 0, mac, ref len) != 0)
             {
-                return null;
+                return Array.Empty<byte>();
             }
             return mac;
         }

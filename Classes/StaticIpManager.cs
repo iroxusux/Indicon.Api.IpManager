@@ -1,7 +1,9 @@
 ﻿using Indicon.Api.IpManager.Forms;
 using System.Diagnostics;
-using System.Net;
 using System.Net.NetworkInformation;
+using Engine;
+using Engine.Notify;
+using Indicon.Api.IpManager.Events;
 
 namespace Indicon.Api.IpManager.Classes
 {
@@ -29,6 +31,7 @@ namespace Indicon.Api.IpManager.Classes
         private const string FILE_NAME = "IpMetaData";
         private const string FILE_EXT = ".bin";
         private static IpManagerForm? BoundForm;
+        private static Engine.Tool.Tool Tool;
 
         public static void Init(ref IpManagerForm oForm)
         {
@@ -41,6 +44,8 @@ namespace Indicon.Api.IpManager.Classes
             {
                 NotifyHandler.FatalError(ErrorCodes.NullFormFault);
             }
+            /// This is a test - we will continue if the test goes well?
+            StudioEngine.Init(THIS_TOOL);
             /// Validate directories are ok
             CheckDirs();
             /// Load from file (if exists) else we will recompile whatever is needed
@@ -48,7 +53,7 @@ namespace Indicon.Api.IpManager.Classes
             /// Initialize Xml Vendor Static Class
             XmlReader.ReadVendorFile(string.Empty);
             /// After a load (successful or not) update the GUI
-            oForm.UpdateIpList(Ips.ToArray());
+            oForm.SetIpList(Ips.ToArray());
         }
         public static void CreateNewIp(object sender, IpAddressCommitEventArgs oArgs)
         {
@@ -172,7 +177,7 @@ namespace Indicon.Api.IpManager.Classes
         }
         private static void UpdateFormIpList()
         {
-            BoundForm?.UpdateIpList(Ips.ToArray());
+            BoundForm?.SetIpList(Ips.ToArray());
         }
         private static void Save()
         {

@@ -16,7 +16,7 @@ namespace Indicon.Api.IpManager.Classes
         internal static void ReadVendorFile(string sFilePath)
         {
             XmlDocument oDoc = new XmlDocument();
-            oDoc.Load(@"D:\Personal\VisualStudioProjects\Indicon.Api.IpManager\vendorMacs.xml");
+            oDoc.Load(@"vendorMacs.xml");
             foreach(XmlNode oNode in oDoc.DocumentElement.ChildNodes)
             {
                 if(oNode.Attributes == null)

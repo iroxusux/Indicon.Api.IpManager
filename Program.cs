@@ -1,9 +1,11 @@
 using Indicon.Api.IpManager.Forms;
 using Indicon.Api.IpManager.Classes;
+using Engine.Forms.Classes;
 namespace Indicon.Api.IpManager
 {
     internal static class Program
     {
+        private static bool DebugMode = false;
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
@@ -22,7 +24,13 @@ namespace Indicon.Api.IpManager
 
             /// Configure and run application
             IpManagerForm oForm = new();  // The view
-            StaticIpManager.Init(ref oForm);  // The view model
+            NewIpManager oManager = new();
+            oManager.BindToForm(ref oForm);
+            oManager.Init();
+            if (DebugMode)
+            {
+                Debugger.Load();
+            }
             Application.Run(oForm);
         }
     }
