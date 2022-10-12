@@ -5,6 +5,8 @@ using System.Xml;
 using System.Net.NetworkInformation;
 using Indicon.Api.IpManager.Events;
 using Engine.Forms.Classes;
+using System.Reflection;
+using System.Diagnostics;
 
 namespace Indicon.Api.IpManager.Classes
 {
@@ -46,6 +48,7 @@ namespace Indicon.Api.IpManager.Classes
             if (!Initialized)
             {
                 base.Init();
+                CheckStartupFolder();
                 ReadVendorFile();
             }
             if(Form == null)
@@ -183,6 +186,7 @@ namespace Indicon.Api.IpManager.Classes
             if(sIP == null || sSubnet == null)
             {
                 Engine.Notify.NotifyHandler.General(CodeNotify.NoPingAdapter);
+                return;
             }
             NetworkManager.PingUpdated += new EventHandler<NetworkManager.PingResultEventArgs>(OnPingUpdated);
             NetworkManager.PingNetwork(sIP, sSubnet);
@@ -242,6 +246,13 @@ namespace Indicon.Api.IpManager.Classes
                 return oVendor.Name;
             }
             return string.Empty;
+        }
+        private void CheckStartupFolder()
+        {
+            string sExeName = "Indicon.Api.IpManager.exe";
+            Debug.WriteLine(Environment.GetFolderPath(Environment.SpecialFolder.Startup));
+            if (File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.Startup) + sExeName)) return;
+            File.Copy(sExeName, Environment.GetFolderPath(Environment.SpecialFolder.Startup) + sExeName);
         }
     }
 }

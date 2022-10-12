@@ -5,6 +5,7 @@ namespace Indicon.Api.IpManager
 {
     internal static class Program
     {
+        private const double VERSION = 2.01;
         private static bool DebugMode = false;
         /// <summary>
         ///  The main entry point for the application.
@@ -18,8 +19,6 @@ namespace Indicon.Api.IpManager
             {
                 Environment.Exit(0);
             }
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
 
             /// Configure and run application

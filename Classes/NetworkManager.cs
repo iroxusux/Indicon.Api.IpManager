@@ -272,7 +272,9 @@ namespace Indicon.Api.IpManager.Classes
             NetworkInterface? oInterface = GetNetworkInterface(sMAC);
             if (oInterface == null) return false;
             var oIpProperties = oInterface.GetIPProperties();
+            if (oIpProperties == null) return false;
             var oIpInfo = oIpProperties.UnicastAddresses.FirstOrDefault(ip => ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+            if (oIpInfo == null) return false;
             var oCurrentIp = oIpInfo.Address.ToString();
             var oCurrentSubnet = oIpInfo.IPv4Mask.ToString();
             var oDhcpEnabled = oIpProperties.GetIPv4Properties().IsDhcpEnabled;
